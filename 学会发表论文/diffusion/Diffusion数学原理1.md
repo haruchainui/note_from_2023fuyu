@@ -74,6 +74,8 @@ $x$出现于$P$中的几率
 
 ## VAE：Lower bound of $logP(x)$
 
+此过程相当于encoder
+
 ![](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240405170623512.png)
 
 ## DDPM:Compute $P_{\theta}(x)$
@@ -87,3 +89,70 @@ $x$出现于$P$中的几率
 ![image-20240405171839155](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240405171839155.png)
 
 ![](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240405171918758.png)
+
+## how to calculate $q(x_{t}|x_{t-1})$（denoise process）
+
+$\beta_n$是预先调制的值
+
+作为超参的其中一个，会影响训练结果
+
+会决定在每一步中denise的噪音权重
+
+### in image
+
+![image-20240415140852949](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240415140852949.png)
+
+### real
+
+ind.=independent
+
+![image-20240415141026663](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240415141026663.png)
+
+![image-20240415141147679](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240415141147679.png)
+$$
+\sqrt{\beta_1-\beta_1\beta_2}N_1+\sqrt{\beta_2}N_2\\
+=\sqrt{1-(1-\beta_2)(1-\beta_1)}N_3\\
+=\sqrt{1-(1-\beta_2-\beta_1+\beta_1\beta_2)}N_3\\
+=\sqrt{\beta_1+\beta_2-\beta_1\beta_2}N3
+$$
+![image-20240415142102470](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240415142102470.png)
+
+上述内容可解释为下述方程
+
+
+$$
+x_T=\sqrt{1-\beta_1}...\sqrt{1-\beta_t}~t_0+\sqrt{1-(1-\beta_1)...(1-\beta_t)}Noise
+$$
+然后定义
+
+![image-20240415154326291](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240415154326291.png)
+
+![image-20240415154304280](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240415154304280.png)
+
+### Q&A
+
+与一步步增加noise相比，这样sample一次noise的效果是一样的
+
+## 目标函数
+
+![image-20240415154733313](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240415154733313.png)
+
+![image-20240415154800446](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240415154800446.png)
+
+ 其中$q(x_T|x_0)$是diffusion process的过程，与$\theta$无关
+
+$P(x_T)$是从Gaussian distribution中sample的noise，也与$\theta$无关
+
+![](./Diffusion%E6%95%B0%E5%AD%A6%E5%8E%9F%E7%90%861.assets/image-20240415160016987.png)
+
+蓝色部分：假设给定$x_t$和$x_0$的情况下，$x_{t-1}$的分布
+$$
+q(x_{t-1},x_t,x_0)
+\\=\frac{q(x_{t-1},x_t,x_0)}{q(x_t,x_0)}
+\\=\frac{q(x_{t}|x_{t-1},x_0)q(x_{t-1},x_0)}{q(x_t|x_0)q(x_0)}
+\\=\frac{q(x_{t}|x_{t-1},x_0)q(x_{t-1}|x_0)q(x_0)}{q(x_t|x_0)q(x_0)}
+$$
+在许多扩散模型中，特别是当$x_t$主要依赖于$x_{t-1}$并且与$x_0$的直接依赖较弱（或者条件独立）时，可以进一步简化为
+$$
+=\frac{q(x_t|x_{t-1})q(x_{t-1}|x_0)q(x_0)}{q(x_t|x_0)q(x_0)}
+$$
